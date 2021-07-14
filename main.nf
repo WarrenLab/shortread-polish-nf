@@ -9,7 +9,6 @@ Channel.fromPath("${params.assembly}.fai")
 
 process align {
     publishDir 'bams'
-    memory '225 GB'
 
     input:
     set sra_id, file(reads) from short_reads
@@ -18,7 +17,7 @@ process align {
     file "${sra_id}.bam" into bam
 
     """
-    bwa mem -t ${task.cpus} ${params.assembly} ${reads} | \
+    minimap2 -ax sr -t ${task.cpus} ${params.assembly} ${reads} | \
         samtools view -bh - | samtools fixmate -m - - | \
         samtools sort -T . -@ ${task.cpus} -m 2G - | \
         samtools markdup - ${sra_id}.bam
