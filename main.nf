@@ -1,14 +1,13 @@
-params.assembly = '/storage/htc/warrenlab/users/esrbhb/killifish/assembly/chrom_assignment/chroms.fa'
+params.assembly = 'assembly.fa'
+params.sra = 'SRX4394280'
 params.maxCoverage = 500
 
-Channel.fromSRA('SRX4394280').set { short_reads }
+Channel.fromSRA(params.sra).set { short_reads }
 Channel.fromPath("${params.assembly}.fai")
     .splitCsv(header: ['name', 'length', 'a', 'b', 'c'], sep: "\t")
     .set { regions }
 
 process align {
-    module 'bwa/bwa-0.7.17'
-    cpus 26
     publishDir 'bams'
     memory '225 GB'
 
@@ -47,8 +46,6 @@ process merge {
 mergedBam.combine(regions).set { bam_and_regions }
 
 process freebayes {
-    module 'bcftools/bcftools-1.8'
-
     input:
     set file("merged.bam"), val(region) from bam_and_regions
 
@@ -64,7 +61,6 @@ process freebayes {
 }
 
 process concat_and_consensus {
-    module 'bcftools/bcftools-1.8'
     publishDir 'consensus'
 
     input:
