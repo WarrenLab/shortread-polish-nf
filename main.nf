@@ -1,35 +1,45 @@
+nextflow.enable.dsl = 2
+
 params.assembly = 'assembly.fa'
 params.sra = 'SRX4394280'
 params.maxCoverage = 500
 
-Channel.fromSRA(params.sra).set { short_reads }
-Channel.fromPath("${params.assembly}.fai")
-    .splitCsv(header: ['name', 'length', 'a', 'b', 'c'], sep: "\t")
-    .set { regions }
+process faidx {
+    input:
+    path assembly
+
+    output:
+    path "${assembly}.fai", emit: fai
+
+    """
+    samtools faidx $assembly
+    """
+}
 
 process align {
     publishDir 'bams'
 
     input:
-    set sra_id, file(reads) from short_reads
+    path assembly
+    set val(sra_id), file(reads)
 
     output:
-    file "${sra_id}.bam" into bam
+    file "${sra_id}.bam"
 
     """
-    minimap2 -ax sr -t ${task.cpus} ${params.assembly} ${reads} | \
+    minimap2 -ax sr -t ${task.cpus} ${assembly} ${reads} | \
         samtools view -bh - | samtools fixmate -m - - | \
         samtools sort -T . -@ ${task.cpus} -m 2G - | \
         samtools markdup - ${sra_id}.bam
     """
 }
 
-process merge {
+process mergeBams {
     input:
-    file bams from bam.collect()
+    file bams
 
     output:
-    file("merged.bam") into mergedBam
+    file("merged.bam")
 
     """
     bams="${bams}"
@@ -42,14 +52,13 @@ process merge {
     """
 }
 
-mergedBam.combine(regions).set { bam_and_regions }
 
 process freebayes {
     input:
-    set file("merged.bam"), val(region) from bam_and_regions
+    set file("merged.bam"), val(region)
 
     output:
-    file "${region.name}.bcf" into region_bcfs
+    file "${region.name}.bcf"
 
     """
     samtools index merged.bam
@@ -63,12 +72,12 @@ process concat_and_consensus {
     publishDir 'consensus'
 
     input:
-    file "*.bcf" from region_bcfs.collect()
+    file "*.bcf"
 
     output:
-    file "polished.fa" into polished
-    file "joined.bcf" into variants
-    file "report.txt" into report
+    file "polished.fa"
+    file "joined.bcf"
+    file "report.txt"
 
     """
     bcftools concat -n *.bcf | bcftools view -Ou -e'type="ref"' \
@@ -86,5 +95,26 @@ process concat_and_consensus {
     echo "\${snp} SNPs, \${ins} insertions, and \${del} deletions corrected." \
         > report.txt
     """
+}
+
+workflow {
+    if (params.sra) {
+        shortReads = Channel.fromSRA(params.sra)
+    } else {
+        shortReads = Channel.fromFilePairs(params.fastq)
+    }
+    
+    assembly = Channel.fromPath(params.assembly)
+
+    faidx(assembly)
+
+    regions = faidx.out.fai
+        .splitCsv(header: ['name', 'length', 'a', 'b', 'c'], sep: "\t")
+        .set { regions }
+
+    align(assembly, shortReads)
+    mergeBams(align.out.collect())
+    
+    concatAndConsensus(freebayes(mergeBams.out.combine(regions)).out.collect())
 }
 
