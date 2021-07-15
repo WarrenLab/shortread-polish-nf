@@ -114,7 +114,7 @@ workflow {
     regions = faidx.out.fai
         .splitCsv(header: ['name', 'length', 'a', 'b', 'c'], sep: "\t")
 
-    align(assembly.combine(shortReads))
+    align(assembly, shortReads)
     mergeBams(align.out.collect())
 
     concatAndConsensus(freebayes(mergeBams.out.combine(regions)).collect())
