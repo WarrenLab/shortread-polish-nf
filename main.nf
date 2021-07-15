@@ -100,8 +100,10 @@ process concat_and_consensus {
 workflow {
     if (params.sra) {
         shortReads = Channel.fromSRA(params.sra)
-    } else {
+    } else if (params.fastq) {
         shortReads = Channel.fromFilePairs(params.fastq)
+    } else {
+        println("Need either --sra or --fastq option!")
     }
     
     assembly = Channel.fromPath(params.assembly)

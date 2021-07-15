@@ -56,8 +56,6 @@ and then use the alignments to correct the assembly.
 
 ## TODO
 * Write help message
-* Convert to DSL2
-* Allow either SRA accession or local fastqs
 
 [vgp]: https://vertebrategenomesproject.org/
 [vgp-github]: https://github.com/VGP/vgp-assembly/tree/master/pipeline/freebayes-polish
