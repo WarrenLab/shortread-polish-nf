@@ -116,7 +116,7 @@ workflow {
 
     align(assembly, shortReads)
     mergeBams(align.out.collect())
-    
-    concatAndConsensus(freebayes(mergeBams.out.combine(regions)).out.collect())
+   
+    concatAndConsensus(freebayes(mergeBams.out.combine(regions)).collect())
 }
 
