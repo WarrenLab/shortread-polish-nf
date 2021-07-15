@@ -69,7 +69,7 @@ process freebayes {
     """
 }
 
-process concat_and_consensus {
+process concatAndConsensus {
     publishDir 'consensus'
 
     input:
@@ -106,7 +106,7 @@ workflow {
     } else {
         println("Need either --sra or --fastq option!")
     }
-    
+
     assembly = Channel.fromPath(params.assembly)
 
     faidx(assembly)
@@ -116,7 +116,7 @@ workflow {
 
     align(assembly, shortReads)
     mergeBams(align.out.collect())
-   
+
     concatAndConsensus(freebayes(mergeBams.out.combine(regions)).collect())
 }
 
