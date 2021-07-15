@@ -21,8 +21,7 @@ process align {
     publishDir 'bams'
 
     input:
-    path assembly
-    tuple(val(sra_id), file(reads))
+    tuple(path(assembly), tuple(val(sra_id), file(reads)))
 
     output:
     file "${sra_id}.bam"
