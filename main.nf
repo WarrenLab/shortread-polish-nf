@@ -1,7 +1,8 @@
 nextflow.enable.dsl = 2
 
-params.assembly = 'assembly.fa'
-params.sra = 'SRX4394280'
+// necessary parameters:
+// --assembly [fasta]: assembly to polish
+// --sra [accession] OR --fastq [path]: short reads
 params.maxCoverage = 500
 
 process faidx {
@@ -21,7 +22,7 @@ process align {
 
     input:
     path assembly
-    set val(sra_id), file(reads)
+    tuple(val(sra_id), file(reads))
 
     output:
     file "${sra_id}.bam"
@@ -55,7 +56,7 @@ process mergeBams {
 
 process freebayes {
     input:
-    set file("merged.bam"), val(region)
+    tuple(file("merged.bam"), val(region))
 
     output:
     file "${region.name}.bcf"
@@ -112,7 +113,6 @@ workflow {
 
     regions = faidx.out.fai
         .splitCsv(header: ['name', 'length', 'a', 'b', 'c'], sep: "\t")
-        .set { regions }
 
     align(assembly, shortReads)
     mergeBams(align.out.collect())
