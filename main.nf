@@ -58,7 +58,7 @@ process freebayes {
     input:
     path assembly
     path "merged.bam"
-    val region
+    each region
 
     output:
     file "${region.name}.bcf"
@@ -114,8 +114,8 @@ workflow {
 
     faidx(assembly)
 
-    regions = Channel.of(faidx.out.fai
-        .splitCsv(header: ['name', 'length', 'a', 'b', 'c'], sep: "\t"))
+    regions = faidx.out.fai
+        .splitCsv(header: ['name', 'length', 'a', 'b', 'c'], sep: "\t")
 
     align(assembly, shortReads)
     mergeBams(align.out.collect())
