@@ -1,8 +1,13 @@
 nextflow.enable.dsl = 2
 
-// necessary parameters:
-// --assembly [fasta]: assembly to polish
-// --sra [accession] OR --fastq [path]: short reads
+helpMessage = """
+Use short reads to polish an assembly.
+
+USAGE: nextflow run WarrenLab/shortread-polish-nf
+    --assembly [fasta]
+    --sra [accession] OR --fastq [path]
+"""
+
 params.maxCoverage = 500
 
 process faidx {
@@ -102,12 +107,18 @@ process concatAndConsensus {
 }
 
 workflow {
+    if (params.help) {
+        print helpMessage
+        exit 0
+    }
+
     if (params.sra) {
         shortReads = Channel.fromSRA(params.sra)
     } else if (params.fastq) {
         shortReads = Channel.fromFilePairs(params.fastq)
     } else {
-        println("Need either --sra or --fastq option!")
+        println "ERROR: Need either --sra or --fastq option!"
+        print helpMessage
     }
 
     assembly = Channel.fromPath(params.assembly)
@@ -122,4 +133,3 @@ workflow {
     freebayes(assembly, mergeBams.out, regions)
     concatAndConsensus(assembly, freebayes.out.collect())
 }
-

@@ -52,10 +52,12 @@ nextflow run WarrenLab/shortread-polish-nf \
     --sra SRX1234567
 ```
 This will download short reads from SRA, align all the reads to your reference,
-and then use the alignments to correct the assembly.
+and then use the alignments to correct the assembly. The output will be in
+`consensus/polished.fa`, and there will be a report of the number of changes
+made at `consensus/report.txt`.
 
-## TODO
-* Write help message
+You can also use the option `--fastq` instead of `--sra` to polish with local
+fastq files instead of reads from SRA.
 
 [vgp]: https://vertebrategenomesproject.org/
 [vgp-github]: https://github.com/VGP/vgp-assembly/tree/master/pipeline/freebayes-polish
