@@ -56,6 +56,7 @@ process mergeBams {
 
 process freebayes {
     input:
+    path assembly
     tuple(file("merged.bam"), val(region))
 
     output:
@@ -64,7 +65,7 @@ process freebayes {
     """
     samtools index merged.bam
     freebayes --bam merged.bam --region ${region.name}:1-${region.length} \
-        --skip-coverage 500 -f ${params.assembly} \
+        --skip-coverage 500 -f ${assembly} \
         | bcftools view --no-version -Ob -o ${region.name}.bcf
     """
 }
@@ -116,7 +117,7 @@ workflow {
 
     align(assembly, shortReads)
     mergeBams(align.out.collect())
-
-    concatAndConsensus(freebayes(mergeBams.out.combine(regions)).collect())
+    freebayes(assembly, mergeBams.out.combine(regions))
+    concatAndConsensus(freebayes.out.collect())
 }
 
