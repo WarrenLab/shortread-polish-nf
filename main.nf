@@ -9,6 +9,7 @@ USAGE: nextflow run WarrenLab/shortread-polish-nf
 """
 
 params.maxCoverage = 500
+params.help = false
 
 process faidx {
     input:
