@@ -57,7 +57,8 @@ process mergeBams {
 process freebayes {
     input:
     path assembly
-    tuple(file("merged.bam"), val(region))
+    path "merged.bam"
+    each region
 
     output:
     file "${region.name}.bcf"
@@ -74,7 +75,8 @@ process concatAndConsensus {
     publishDir 'consensus'
 
     input:
-    file "*.bcf"
+    path assembly
+    path "*.bcf"
 
     output:
     file "polished.fa"
@@ -83,10 +85,10 @@ process concatAndConsensus {
 
     """
     bcftools concat -n *.bcf | bcftools view -Ou -e'type="ref"' \
-        | bcftools norm -Ob -f ${params.assembly} -o joined.bcf
+        | bcftools norm -Ob -f $assembly -o joined.bcf
     bcftools index joined.bcf
     bcftools consensus -i'QUAL>1 && (GT="AA" || GT="Aa")' \
-        -Hla -f ${params.assembly} joined.bcf > polished.fa
+        -Hla -f $assembly joined.bcf > polished.fa
 
     snp=\$(bcftools view -i'QUAL>1 && (GT="AA" || GT="Aa")' \
         -Ha joined.bcf | grep -c 'TYPE=snp')
@@ -117,7 +119,7 @@ workflow {
 
     align(assembly, shortReads)
     mergeBams(align.out.collect())
-    freebayes(assembly, mergeBams.out.combine(regions))
-    concatAndConsensus(freebayes.out.collect())
+    freebayes(assembly, mergeBams.out, regions)
+    concatAndConsensus(assembly, freebayes.out.collect())
 }
 
