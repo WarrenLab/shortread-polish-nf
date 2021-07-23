@@ -78,7 +78,7 @@ process freebayes {
 }
 
 process concatAndConsensus {
-    publishDir 'consensus'
+    publishDir 'consensus', mode: 'copy'
 
     input:
     path assembly
