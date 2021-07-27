@@ -81,7 +81,7 @@ process concatAndConsensus {
     publishDir 'consensus', mode: 'copy'
 
     input:
-    path assembly
+    path "unpolished.fa"
     path "*.bcf"
 
     output:
@@ -91,10 +91,10 @@ process concatAndConsensus {
 
     """
     bcftools concat -n *.bcf | bcftools view -Ou -e'type="ref"' \
-        | bcftools norm -Ob -f $assembly -o joined.bcf
+        | bcftools norm -Ob -f unpolished.fa -o joined.bcf
     bcftools index joined.bcf
     bcftools consensus -i'QUAL>1 && (GT="AA" || GT="Aa")' \
-        -Hla -f $assembly joined.bcf > polished.fa
+        -Hla -f unpolished.fa joined.bcf > polished.fa
 
     snp=\$(bcftools view -i'QUAL>1 && (GT="AA" || GT="Aa")' \
         -Ha joined.bcf | grep -c 'TYPE=snp')
