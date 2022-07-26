@@ -48,7 +48,7 @@ variable `$NXF_WORK` to point to an empty directory on HPC.
 To download the pipeline and run it on your assembly, just run the command:
 ```
 nextflow run WarrenLab/shortread-polish-nf \
-    --reference unpolished_assembly.fa \
+    --assembly unpolished_assembly.fa \
     --sra SRX1234567
 ```
 This will download short reads from SRA, align all the reads to your reference,

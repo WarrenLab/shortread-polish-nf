@@ -11,6 +11,9 @@ USAGE: nextflow run WarrenLab/shortread-polish-nf
 params.maxCoverage = 500
 params.help = false
 
+params.sra = false
+params.fastq = false
+
 process faidx {
     input:
     path assembly
